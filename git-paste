@@ -1,0 +1,9 @@
+#!/bin/sh
+
+# Usage:
+#
+# git paste [commit]
+#
+# Uploads the indicated commit to fpaste.org
+
+git format-patch -1 --stdout $1 | fpaste

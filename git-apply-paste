@@ -1,0 +1,106 @@
+#!/bin/bash
+
+# Usage:
+#
+# git apply-paste <URL>
+# git apply-paste <IRC user or channel name>
+#
+# Attempts to apply a patch from a pastebin server. It will use
+# git-am if the patch is a mailbox, or git-apply if it is a plain
+# diff. URL can point to either the raw patch data or the "main"
+# HTML page for the patch.
+#
+# If the argument is not an http URL, then it is assumed to be the
+# name of an IRC user or channel, and git-apply-paste will try to find
+# a URL containing the word "paste" in the recent portion of the XChat
+# log for that user or channel. You do not need to include the "#" for
+# a channel name.
+
+debug=:
+while [[ "$1" == -* ]]; do
+    case "$1" in
+	-d|--debug)
+	    debug=echo
+	    debug_arg=-d
+	    ;;
+	-n|--no-redirect)
+	    no_redirect=1
+	    ;;
+	*)
+	    echo "Usage: git apply-paste [options] <URL or IRC reference>" 1>&2
+	    exit 1
+	    ;;
+    esac
+    shift
+done
+
+case $1 in
+    http:*|https:*)
+	url="$1"
+	;;
+
+    *)
+	shopt -s nullglob
+	files=$(echo ~/.xchat2/scrollback/*/$1.txt ~/.xchat2/scrollback/*/\#$1.txt)
+	if [ -z "$files" ]; then
+	    echo "No IRC log for $1" 1>&2
+	    exit 1
+	fi
+	$debug files=$files
+
+	url_line=$(tail $files | sort -n -r | grep 'https*://.*paste' | head -1)
+	if [ -z "$url_line" ]; then
+	    echo "No url found" 1>&2
+	    exit 1
+	fi
+
+	$debug url_line=$url_line
+	url=$(echo $url_line | sed -e 's|.*\(https*://[^ ]*[^ .,!)>][^ .,!)>]*\).*|\1|')
+	echo "Applying $url"
+	;;
+esac
+
+file=$(mktemp)
+$debug downloading $url to $file
+curl -o $file -s $url || exit $?
+
+read patchstart < $file
+$debug file starts with: "$patchstart"
+case $patchstart in
+    From*)
+	exec git am $file
+	;;
+    diff*)
+	exec git apply --index --reject $file
+	;;
+    \<*)
+	$debug file is HTML
+	if [ -n "$no_redirect" ]; then
+	    echo "Cannot figure out how to apply $url" 1>&2
+	    exit 1
+	fi
+
+	raw=$(sed -ne "s/.*href=['\"]\([^'\"]*\(raw\|\?dl=\)[^'\"]*\)['\"].*/\1/p" $file)
+	$debug raw=$raw
+	case $raw in
+	    http://|https://)
+		url=$raw
+		;;
+	    /*)
+		url=$(echo $url | sed -e 's|\(https*://[^/]*\).*|\1|')$raw
+		;;
+	    *)
+		echo "Cannot figure out how to apply $url" 1>&2
+		exit 1
+		;;
+	esac
+
+	echo "Redirecting to $url"
+	exec git-apply-paste $debug_arg -n "$url"
+	echo "HERE?"
+	;;
+    *)
+	echo "Cannot figure out how to apply $url" 1>&2
+	exit 1
+	;;	    
+esac

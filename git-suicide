@@ -1,0 +1,18 @@
+#!/bin/sh
+
+# Usage:
+#
+# git suicide
+#
+# Deletes the current branch, leaving you on master
+
+branch=$(git symbolic-ref HEAD)
+branch=${branch##refs/heads/}
+
+if [ -z "$branch" ]; then
+    echo "Could not determine branch" 1>&2
+    exit 1
+fi
+
+git checkout master &&
+git branch -D $branch

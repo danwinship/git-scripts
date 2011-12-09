@@ -1,0 +1,33 @@
+#!/bin/sh
+
+# Usage:
+#
+# git remaster [branch]
+#
+# Rebases the indicated branch (or the current branch) on top of the
+# latest version of origin/master (updating master as well along the
+# way).
+
+if [ -z "$1" ]; then
+    branch=$(git symbolic-ref HEAD)
+    branch=${branch##refs/heads/}
+else
+    branch="$1"
+fi
+
+if [ -z "$branch" ]; then
+    echo "Could not determine branch" 1>&2
+    exit 1
+fi
+
+git fetch origin || exit $?
+
+master=$(git rev-parse master)
+origin_master=$(git rev-parse origin/master)
+if [ $master != $origin_master ]; then
+    (git checkout master &&
+     git pull &&
+     git checkout $branch) || exit $?
+fi
+
+git rebase master
