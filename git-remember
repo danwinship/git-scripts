@@ -1,0 +1,38 @@
+#!/bin/sh
+
+# This is one part of a system to make recently-seen git commits
+# be autocompletable. To use:
+#
+# Set up git autocompletion. (eg, in Fedora, make sure bash-completion
+# is installed).
+#
+# Add to your .bashrc:
+#
+#     # This copies the __git_refs function to __real__git_refs
+#     # and makes a new __git_refs that also uses git-remember
+#     eval "__real$(declare -f __git_refs)"
+#     __git_refs () {
+#         __real__git_refs "$@"
+#         git-remember --completions
+#     }
+#
+# Run
+#
+#     git config --global core.pager git-remember
+#     # if your pager isn't "less"
+#     git config --global remember.pager whatever
+#
+# Now the first 20 commits seen in the most recent "git log" output
+# will be autocompletable
+
+git_dir=$(git rev-parse --git-dir) || exit $?
+
+if [ "$*" = "--completions" ]; then
+    if [ -f $git_dir/remembered_commits ]; then
+	head -20 $git_dir/remembered_commits
+    fi
+    exit 0
+fi
+
+pager=$(git config remember.pager || echo less)
+sed -ne "p; s/.*\([[:xdigit:]]\{40\}\).*/\1/w $git_dir/remembered_commits" | $pager
