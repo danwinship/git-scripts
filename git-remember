@@ -22,17 +22,19 @@
 #     # if your pager isn't "less"
 #     git config --global remember.pager whatever
 #
-# Now the first 20 commits seen in the most recent "git log" output
-# will be autocompletable
+# Now the commits seen in the most recent "git log" or "git blame"
+# output will be autocompletable
 
 git_dir=$(git rev-parse --git-dir) || exit $?
 
 if [ "$*" = "--completions" ]; then
     if [ -f $git_dir/remembered_commits ]; then
-	head -20 $git_dir/remembered_commits
+	cat $git_dir/remembered_commits
     fi
-    exit 0
+else
+    pager=$(git config remember.pager || echo less)
+    sed -n -e "p" \
+	   -e "s/.*commit \([[:xdigit:]]\{40\}\).*/\1/w $git_dir/remembered_commits" \
+	   -e "s/^\([[:xdigit:]]\{8\}\) (.*/\1/w $git_dir/remembered_commits" \
+	| $pager
 fi
-
-pager=$(git config remember.pager || echo less)
-sed -ne "p; s/.*\([[:xdigit:]]\{40\}\).*/\1/w $git_dir/remembered_commits" | $pager
