@@ -22,8 +22,8 @@
 #     # if your pager isn't "less"
 #     git config --global remember.pager whatever
 #
-# Now the commits seen in the most recent "git log" or "git blame"
-# output will be autocompletable
+# Now the commits seen in the most recent "git log", "git blame",
+# and "git reflog" output will be autocompletable
 
 git_dir=$(git rev-parse --git-dir) || exit $?
 
@@ -36,5 +36,6 @@ else
     sed -n -e "p" \
 	   -e "s/.*commit \([[:xdigit:]]\{40\}\).*/\1/w $git_dir/remembered_commits" \
 	   -e "s/^\([[:xdigit:]]\{8\}\) (.*/\1/w $git_dir/remembered_commits" \
+	   -e "s/^\(\x1b\[[[:digit:]]*m\)*\([[:xdigit:]]\{7\}\)\(\x1b\[[[:digit:]]*m\)* .*@{.*/\2/w $git_dir/remembered_commits" \
 	| $pager
 fi
