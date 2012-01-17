@@ -48,7 +48,7 @@ case $1 in
 	fi
 	$debug files=$files
 
-	url_line=$(tail $files | sort -n -r | grep 'https*://.*paste' | head -1)
+	url_line=$(tail $files | sort -n -r | grep 'https*://.*past' | head -1)
 	if [ -z "$url_line" ]; then
 	    echo "No url found" 1>&2
 	    exit 1
@@ -80,10 +80,10 @@ case $patchstart in
 	    exit 1
 	fi
 
-	raw=$(sed -ne "s/.*href=['\"]\([^'\"]*\(raw\|\?dl=\)[^'\"]*\)['\"].*/\1/p" $file)
+	raw=$(sed -ne "s/.*href=['\"]\([^'\"]*\(raw\|\?dl=\|\/download\)[^'\"]*\)['\"].*/\1/p" $file)
 	$debug raw=$raw
 	case $raw in
-	    http://|https://)
+	    http://*|https://*)
 		url=$raw
 		;;
 	    /*)
