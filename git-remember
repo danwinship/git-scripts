@@ -25,6 +25,8 @@
 # Now the commits seen in the most recent "git log", "git blame",
 # and "git reflog" output will be autocompletable
 
+COLOR="\x1b\[[[:digit:]]*m"
+
 git_dir=$(git rev-parse --git-dir) || exit $?
 
 if [ "$*" = "--completions" ]; then
@@ -34,7 +36,7 @@ if [ "$*" = "--completions" ]; then
 else
     pager=$(git config remember.pager || echo less)
     sed -n -e "p" \
-	   -e "s/.*commit \([[:xdigit:]]\{40\}\).*/\1/w $git_dir/remembered_commits" \
-	   -e "s/^\(\x1b\[[[:digit:]]*m\)*\^*\([[:xdigit:]]\{7,8\}\)\(\x1b\[[[:digit:]]*m\)*.*/\2/w $git_dir/remembered_commits" \
+	   -e "s/^\(${COLOR}\)*commit \([[:xdigit:]]\{8\}\).*/\2/w $git_dir/remembered_commits" \
+	   -e "s/^\(${COLOR}\)*\^*\([[:xdigit:]]\{7,8\}\)\(${COLOR}\)*.*/\2/w $git_dir/remembered_commits" \
 	| $pager
 fi
