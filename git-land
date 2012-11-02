@@ -10,37 +10,7 @@
 # and (assuming the previous was all successful), deletes the branch,
 # leaving master ready to be pushed to origin with the new code.
 
-current_branch=$(git symbolic-ref HEAD)
-current_branch=${current_branch##refs/heads/}
-
-if [ -z "$1" ]; then
-    branch=$current_branch
-else
-    branch="$1"
-fi
-
-if [ -z "$branch" ]; then
-    echo "Could not determine branch" 1>&2
-    exit 1
-fi
-
-git fetch origin || exit $?
-
-master=$(git rev-parse master)
-origin_master=$(git rev-parse origin/master)
-if [ $master != $origin_master ]; then
-    if [ $current_branch != master ]; then
-	git checkout master || exit $?
-    fi
-    git pull || exit $?
-    git checkout $branch || exit $?
-else
-    if [ $current_branch != $branch ]; then
-	git checkout $branch || exit $?
-    fi
-fi
-
-git rebase master &&
+git remaster "$@" &&
 git checkout master &&
-git merge $branch &&
-git branch -d $branch
+git merge @{-1} &&
+git branch -d @{-1}
