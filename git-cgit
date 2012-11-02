@@ -1,0 +1,51 @@
+#!/bin/sh
+
+# Usage:
+#
+# git cgit [revision]
+#
+#   Outputs a cgit link to the indicated revision, or HEAD if no revision
+#   is specified.
+#
+#   To control the output URL, set the git config variable
+#   url.[GIT-URL-PREFIX].cgit to the cgit URL prefix, where "$module"
+#   will expand to the trailing part of the git URL and "$rev" will
+#   expand to the specified git revision. Eg:
+#
+#   [url "ssh://danw@git.gnome.org/git/"]
+#           cgit = http://git.gnome.org/browse/$module/commit/?id=$rev
+
+rev=$(git rev-parse --revs-only "$@" --short --default HEAD)
+
+branch=$(git symbolic-ref HEAD)
+branch=${branch##refs/heads/}
+if [ -z "$branch" ]; then
+    echo "Could not determine current branch" 1>&2
+    exit 1
+fi
+
+remote=$(git config --get branch."$branch".remote)
+if [ -z "$remote" ]; then
+    echo "Could not determine remote for '$branch'" 1>&2
+    exit 1
+fi
+
+url=$(git config --get remote."$remote".url)
+if [ -z "$url" ]; then
+    echo "Could not determine URL for '$remote'" 1>&2
+    exit 1
+fi
+# strip out username
+url=$(echo $url | sed -e 's|\([^/]*\)@||')
+
+git config --get-regexp 'url\..*\.cgit' | while read match_url cgit_url; do
+    match_url=$(echo $match_url | sed -e 's/^url\.//' -e 's/\.cgit//' -e 's|\([^/]*\)@||')
+    module="${url#$match_url}"
+    if [ "$module" != "$url" ]; then
+	echo $cgit_url | sed -e s"|\\\$module|$module|" -e s"|\\\$rev|$rev|"
+	# since the while loop will have a status of 0 if it reaches
+	# the end (ie, we failed), then exit with non-zero status to
+	# mean we succeeded. Hence the && rather than || below
+	exit 1
+    fi
+done && { echo "Could not determine cgit repository for '$url'" 1>&2; exit 1; }
