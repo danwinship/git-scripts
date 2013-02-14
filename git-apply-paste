@@ -80,7 +80,7 @@ case $patchstart in
 	    exit 1
 	fi
 
-	raw=$(sed -ne "s/.*href=['\"]\([^'\"]*\(raw\|\?dl=\|\/download\)[^'\"]*\)['\"].*/\1/p" $file)
+	raw=$(sed -ne "s/.*href=['\"]\([^'\"]*\(raw\|\?dl=\|\/download|\/plain\/\)[^'\"]*\)['\"].*/\1/p" $file)
 	$debug raw=$raw
 	case $raw in
 	    http://*|https://*)
