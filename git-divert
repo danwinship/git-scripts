@@ -1,0 +1,17 @@
+#!/bin/sh
+
+# Usage:
+#
+# git divert BRANCHNAME
+#
+# Diverts the new code on the current branch into a new branch.
+#
+# That is, it creates a new branch BRANCHNAME at the current HEAD,
+# hard resets the current branch to its upstream, and then checks out
+# the new branch.
+
+git rev-parse --verify --quiet @{u} || exit 1
+
+git branch "$1" &&
+git reset --hard @{u} &&
+git checkout "$1"
