@@ -70,7 +70,7 @@ esac
 
 file=$(mktemp)
 $debug downloading $url to $file
-curl -o $file -s $url || exit $?
+curl -L -o $file -s $url || exit $?
 
 read patchstart < $file
 $debug file starts with: "$patchstart"
