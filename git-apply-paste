@@ -41,22 +41,30 @@ case $1 in
 
     *)
 	shopt -s nullglob
-	files=$(echo ~/.xchat2/scrollback/*/$1.txt ~/.xchat2/scrollback/*/\#$1.txt)
-	if [ -z "$files" ]; then
+	for file in ~/{.config/xchat2,.xchat2}/scrollback/*/{\#,}$1.txt; do
+	    $debug file=$file
+	    found_one=true
+
+	    url_line=$(tail $file | sort -n -r | grep 'https*://.*past' | head -1)
+	    if [ -z "$url_line" ]; then
+		continue
+	    fi
+
+	    $debug url_line=$url_line
+	    url=$(echo $url_line | sed -e 's|.*\(https*://[^ ]*[^ .,!)>][^ .,!)>]*\).*|\1|')
+	    echo "Applying $url"
+	    break
+	done
+
+	if [ -z "$found_one" ]; then
 	    echo "No IRC log for $1" 1>&2
 	    exit 1
 	fi
-	$debug files=$files
 
-	url_line=$(tail $files | sort -n -r | grep 'https*://.*past' | head -1)
-	if [ -z "$url_line" ]; then
+	if [ -z "$url" ]; then
 	    echo "No url found" 1>&2
 	    exit 1
 	fi
-
-	$debug url_line=$url_line
-	url=$(echo $url_line | sed -e 's|.*\(https*://[^ ]*[^ .,!)>][^ .,!)>]*\).*|\1|')
-	echo "Applying $url"
 	;;
 esac
 
