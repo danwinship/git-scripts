@@ -78,7 +78,7 @@ case $patchstart in
     From*)
 	exec git am $file
 	;;
-    diff*)
+    diff*|commit*)
 	exec git apply --index --reject $file
 	;;
     \<*)
