@@ -9,7 +9,15 @@
 # way).
 
 if [ -z "$1" ]; then
-    git checkout "$1" || exit $?
+    branch=$(git symbolic-ref HEAD)
+    branch=${branch##refs/heads/}
+else
+    branch="$1"
+fi
+
+if [ -z "$branch" ]; then
+    echo "Could not determine branch" 1>&2
+    exit 1
 fi
 
 git fetch origin || exit $?
@@ -17,8 +25,9 @@ git fetch origin || exit $?
 master=$(git rev-parse master)
 origin_master=$(git rev-parse origin/master)
 if [ $master != $origin_master ]; then
-    (git rebase origin/master master &&
-     git checkout -) || exit $?
+    (git checkout master &&
+     git pull &&
+     git checkout $branch) || exit $?
 fi
 
 git rebase master
