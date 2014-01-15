@@ -10,13 +10,16 @@
 # and (assuming the previous was all successful), deletes the branch,
 # leaving master ready to be pushed to origin with the new code.
 
+rev=$(git rev-parse --revs-only "$@")
+args=$(git rev-parse --no-revs --sq "$@")
+
 current_branch=$(git symbolic-ref HEAD)
 current_branch=${current_branch##refs/heads/}
 
-if [ -z "$1" ]; then
+if [ -z "$rev" ]; then
     branch=$current_branch
 else
-    branch="$1"
+    branch="$rev"
 fi
 
 if [ -z "$branch" ]; then
@@ -24,7 +27,7 @@ if [ -z "$branch" ]; then
     exit 1
 fi
 
-git fetch origin || exit $?
+git fetch --prune origin || exit $?
 
 master=$(git rev-parse master)
 origin_master=$(git rev-parse origin/master)
@@ -42,5 +45,5 @@ fi
 
 git rebase master &&
 git checkout master &&
-git merge $branch &&
-git branch -d $branch
+eval "git merge $args $branch" &&
+git branch -D $branch
