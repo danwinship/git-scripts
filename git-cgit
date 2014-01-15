@@ -15,7 +15,7 @@
 #   [url "ssh://danw@git.gnome.org/git/"]
 #           cgit = http://git.gnome.org/browse/$module/commit/?id=$rev
 
-rev=$(git rev-parse --revs-only "$@" --short --default HEAD)
+rev=$(git rev-parse --revs-only "$@" --short --default HEAD | head -1)
 
 branch=$(git symbolic-ref HEAD)
 branch=${branch##refs/heads/}
