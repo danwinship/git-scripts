@@ -42,6 +42,7 @@ git config --get-regexp 'url\..*\.cgit' | while read match_url cgit_url; do
     match_url=$(echo $match_url | sed -e 's/^url\.//' -e 's/\.cgit//' -e 's|\([^/]*\)@||')
     module="${url#$match_url}"
     if [ "$module" != "$url" ]; then
+	module="${module%.git}"
 	echo $cgit_url | sed -e s"|\\\$module|$module|" -e s"|\\\$rev|$rev|"
 	# since the while loop will have a status of 0 if it reaches
 	# the end (ie, we failed), then exit with non-zero status to
