@@ -5,8 +5,7 @@
 # git amend [git-commit options]
 #
 #   Merges the indicated (and/or already-staged) changes into HEAD.
-#   Equivalent to "git commit --amend [options]", but just keeps the
-#   existing commit message without prompting.
+#   Equivalent to "git commit --amend --no-edit [options]"
 #
 #
 # git amend <commit> [git-commit options]
@@ -14,29 +13,71 @@
 #   eg: git amend HEAD^^ -a
 #
 #   Merges the indicated (and/or already-staged) changes into the
-#   given commit by first committing them rewriting history with git
-#   rebase. If the rebase fails, you will be left inside the "git
-#   rebase -i" operation. If the rebase fails, and there were unstaged
-#   changes in the working tree that were not selected as part of the
-#   amend operation, then those changes will have been stored in a
-#   temporary commit at the top of the tree, and you can use
-#   "git reset HEAD^" to uncommit them after fixing up the rebase.
+#   given commit by first committing them and then rewriting history
+#   with git rebase. If the rebase fails, you will be left inside the
+#   "git rebase -i" operation. If the rebase fails, and there were
+#   unstaged changes in the working tree that were not selected as
+#   part of the amend operation, then those changes will have been
+#   stored in a temporary commit at the top of the tree, and you can
+#   use "git reset HEAD^" to uncommit them after fixing up the rebase.
+#
+#   If the options include "-e", you will be able to edit the commit
+#   message after the fixup is committed; otherwise it will just
+#   keep the existing commit message unchanged.
+#
+#
+# git amend -e <commit>
+#
+#   Edit the indicated commit message without changing the contents of
+#   the commit.
+
+if [ -n "$GIT_AMEND_EDITING" ]; then
+    case "$1" in
+	*/git-rebase-todo)
+	    # We're being invoked by git-amend to edit the todo list
+	    perl -pi -e "s/pick/reword/ if /\W${GIT_AMEND_REV}/;" "$1"
+	    exit 0;
+	    ;;
+	*)
+	    # We're being invoked by git-amend to edit a commit message
+	    exec "$GIT_AMEND_ORIG_EDITOR" "$*"
+	    ;;
+    esac
+fi
 
 rev=$(git rev-parse --revs-only "$@")
 args=$(git rev-parse --no-revs --sq "$@")
 
 if [ -z "$rev" ]; then
-    eval "git commit --amend -C HEAD $args"
+    eval "git commit --amend --no-edit $args"
     exit $?
 fi
 
-eval "git commit --no-verify --quiet --fixup=$rev $args" || exit $?
+case $args in
+"'-e'"*|*" '-e'"*)
+    args=$(echo $args | sed -e "s/'-e'//")
+    export GIT_AMEND_ORIG_EDITOR=$(git var GIT_EDITOR)
+    export GIT_EDITOR="$0"
+    export GIT_AMEND_EDITING=1
+    export GIT_AMEND_REV=$(echo $rev | cut -b 1-7)
+    ;;
+*)
+    export GIT_EDITOR=true
+    ;;
+esac
+
+if ! eval "git commit --no-verify --quiet --fixup=$rev $args"; then
+    status=$?
+    if [ -z "$GIT_AMEND_EDITING" ]; then
+        exit $status
+    fi
+fi
 
 if git commit -a -m 'unstaged changes during git-amend' > /dev/null; then
     unstaged_changes=1
 fi
 
-if ! GIT_EDITOR=true git rebase -i --autosquash "$rev"^; then
+if ! git rebase -i --autosquash "$rev"^; then
     exit $?
 fi
 
