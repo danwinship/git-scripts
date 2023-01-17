@@ -8,11 +8,14 @@
 # latest version of origin/master (updating master as well along the
 # way).
 
-if [ -z "$1" ]; then
+rev=$(git rev-parse --symbolic --revs-only "$@")
+args=$(git rev-parse --flags --sq "$@")
+
+if [ -z "$rev" ]; then
     branch=$(git symbolic-ref HEAD)
     branch=${branch##refs/heads/}
 else
-    branch="$1"
+    branch="$rev"
 fi
 
 if [ -z "$branch" ]; then
@@ -30,4 +33,4 @@ if [ $master != $origin_master ]; then
      git checkout $branch) || exit $?
 fi
 
-git rebase master
+git rebase $args master
