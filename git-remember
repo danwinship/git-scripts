@@ -36,7 +36,7 @@ if [ "$*" = "--completions" ]; then
 else
     pager=$(git config remember.pager || echo less)
     sed -n -e "p" \
-	   -e "s/^\(${COLOR}\)*commit \([[:xdigit:]]\{8\}\).*/\2/w $git_dir/remembered_commits" \
-	   -e "s/^\(${COLOR}\)*\^*\([[:xdigit:]]\{7,8\}\)\(${COLOR}\)*.*/\2/w $git_dir/remembered_commits" \
+	   -e "s/^\(${COLOR}\)*commit \([[:xdigit:]]\{10\}\).*/\2/w $git_dir/remembered_commits" \
+	   -e "s/^\(${COLOR}\)*\^*\([[:xdigit:]]\{10,11\}\)\(${COLOR}\)*.*/\2/w $git_dir/remembered_commits" \
 	| $pager
 fi
