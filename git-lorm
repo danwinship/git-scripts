@@ -1,0 +1,3 @@
+#!/bin/sh
+
+git log --pretty=oneline --abbrev-commit $(git master-name)..$1
