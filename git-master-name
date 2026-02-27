@@ -1,0 +1,13 @@
+#!/bin/bash
+
+# Usage:
+#
+# git master-name
+#
+# Returns either "master" or "main" depending on what upstream is using
+
+if git rev-parse --verify -q main >/dev/null; then
+    echo main
+else
+    echo master
+fi

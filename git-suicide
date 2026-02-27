@@ -14,5 +14,5 @@ if [ -z "$branch" ]; then
     exit 1
 fi
 
-git checkout master &&
+git checkout $(git master-name) &&
 git branch -D $branch

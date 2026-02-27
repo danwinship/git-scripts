@@ -27,13 +27,15 @@ if [ -z "$branch" ]; then
     exit 1
 fi
 
+master_name=$(git master-name)
+
 git fetch --prune origin || exit $?
 
-master=$(git rev-parse master)
-origin_master=$(git rev-parse origin/master)
+master=$(git rev-parse ${master_name})
+origin_master=$(git rev-parse origin/${master_name})
 if [ $master != $origin_master ]; then
-    if [ $current_branch != master ]; then
-	git checkout master || exit $?
+    if [ $current_branch != ${master_name} ]; then
+	git checkout ${master_name} || exit $?
     fi
     git pull || exit $?
     git checkout $branch || exit $?
@@ -43,7 +45,7 @@ else
     fi
 fi
 
-git rebase master &&
-git checkout master &&
+git rebase ${master_name} &&
+git checkout ${master_name} &&
 eval "git merge $args $branch" &&
 git branch -D $branch

@@ -25,12 +25,14 @@ fi
 
 git fetch --prune origin || exit $?
 
-master=$(git rev-parse master)
-origin_master=$(git rev-parse origin/master)
+master_name=$(git master-name)
+
+master=$(git rev-parse ${master_name})
+origin_master=$(git rev-parse origin/${master_name})
 if [ $master != $origin_master ]; then
-    (git checkout master &&
+    (git checkout ${master_name} &&
      git pull &&
      git checkout $branch) || exit $?
 fi
 
-git rebase $args master
+git rebase $args ${master_name}
