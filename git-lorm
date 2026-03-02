@@ -1,3 +1,14 @@
 #!/bin/sh
 
+# Usage:
+#
+# git lorm [branch]
+#
+# Gives a summary of the branch's commits on top of master (using the
+# current branch if you don't specify one).
+#
+# "lorm" stands for "log oneline reverse (since) master", because it
+# used to do "--reverse" too, but then I decided that was weird, but
+# I'd already gotten used to the name by that point.
+
 git log --pretty=oneline --abbrev-commit $(git master-name)..$1

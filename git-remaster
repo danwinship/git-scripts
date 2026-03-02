@@ -2,11 +2,12 @@
 
 # Usage:
 #
-# git remaster [branch]
+# git remaster [args] [branch]
 #
 # Rebases the indicated branch (or the current branch) on top of the
-# latest version of origin/master (updating master as well along the
-# way).
+# latest version of origin/master (or origin/main) (updating
+# master/main as well along the way). Additional arguments get passed
+# to "git rebase", so in particular you can do "git remaster -i".
 
 rev=$(git rev-parse --symbolic --revs-only "$@")
 args=$(git rev-parse --flags --sq "$@")

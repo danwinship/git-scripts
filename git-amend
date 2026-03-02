@@ -31,6 +31,9 @@
 #   Edit the indicated commit message without changing the contents of
 #   the commit.
 
+# git-amend hacks "git rebase -i" by using itself as GIT_EDITOR so it
+# can automatically rewrite the todo. So detect if we're being called
+# in that case.
 if [ -n "$GIT_AMEND_EDITING" ]; then
     case "$1" in
 	*/git-rebase-todo)

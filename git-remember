@@ -30,10 +30,14 @@ COLOR="\x1b\[[[:digit:]]*m"
 git_dir=$(git rev-parse --git-dir) || exit $?
 
 if [ "$*" = "--completions" ]; then
+    # Invoked as part of bash autocompletion, so dump the list of
+    # remembered commits.
     if [ -f $git_dir/remembered_commits ]; then
 	cat $git_dir/remembered_commits
     fi
 else
+    # Invoked as the pager, so extract commits from stdin and then
+    # pass to the real pager.
     pager=$(git config remember.pager || echo less)
     sed -n -e "p" \
 	   -e "s/^\(${COLOR}\)*commit \([[:xdigit:]]\{10\}\).*/\2/w $git_dir/remembered_commits" \
