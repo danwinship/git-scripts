@@ -5,10 +5,26 @@
 # git lorm [branch]
 #
 # Gives a summary of the branch's commits on top of master (using the
-# current branch if you don't specify one).
+# current branch if you don't specify one), plus the commit where it
+# joins to master.
 #
 # "lorm" stands for "log oneline reverse (since) master", because it
 # used to do "--reverse" too, but then I decided that was weird, but
 # I'd already gotten used to the name by that point.
 
-git log --pretty=oneline --abbrev-commit $(git master-name)..$1
+# Get the log since master
+master=$(git master-name)
+base=$(git log --decorate=short --color=always --pretty=oneline --abbrev-commit ${master}..$1)
+branchlength=0
+if [[ "${base}" != "" ]]; then
+    echo "${base}"
+    branchlength=$(echo "${base}" | wc -l)
+fi
+
+# Find the "join" commit
+join=$(git log --format=%h $1 | awk "NR == ${branchlength}+1 { print; exit; }")
+
+# Print that commit, showing how far off master it is
+echo "----"
+git log --decorate=short --color=never --format='%h (%cr)%d %s' ${master} | awk '$1 == "'"${join}"'" { if (NR==1) { print; exit } else { printf "%s, %d before '"${master}"'%s\n", gensub(/^([^)]*).*$/, "\\1", 1), NR, gensub(/^[^)]*(.*)$/, "\\1", 1); exit; } }'
+
