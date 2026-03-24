@@ -1,0 +1,25 @@
+#!/bin/sh
+
+# Usage:
+#
+# git recent [-n N]
+#
+#   Shows the N most-recently-modified branches by you (default 15)
+#
+# git recent -a
+#
+#   Shows all branches modified by you
+
+limit="head -n 15"
+case "$1" in
+    -a)
+        limit="cat"
+        ;;
+    -n)
+        shift
+        limit="head -n $1"
+        ;;
+esac
+
+user=$(git config get user.name)
+git for-each-ref --color=always --sort=-committerdate refs/heads/ --format '%(committername) - %(color:bold)%(refname:short)%(color:reset) (%(contents:subject))' | sed -ne "s/^${user} - //p" | ${limit}
